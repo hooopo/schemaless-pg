@@ -21,6 +21,19 @@
 class SlColumn < ApplicationRecord
   belongs_to :sl_table
 
+  # TODO fix table name change
+  after_create do 
+    sl_table.create_or_replace_view!
+  end
+
+  after_update do 
+    sl_table.create_or_replace_view!
+  end
+
+  after_destroy do 
+    sl_table.create_or_replace_view!
+  end
+
   NATIVE_DATABASE_TYPES = {
     primary_key: "bigserial primary key",
     string:      { name: "character varying" },
@@ -65,6 +78,6 @@ class SlColumn < ApplicationRecord
   }
 
   def expression
-    %Q{(CAST (data ->> #{ApplicationRecord.connection.quote(self.id.to_s)}) AS #{self.private_type}) AS #{ApplicationRecord.connection.quote_column_name(self.name)}}
+    %Q{(CAST (data ->> #{ApplicationRecord.connection.quote(self.id.to_s)} AS #{self.private_type})) AS #{ApplicationRecord.connection.quote_column_name(self.name)}}
   end
 end
