@@ -14,4 +14,5 @@
 #
 
 class SlRow < ApplicationRecord
+  belongs_to :sl_table
 end

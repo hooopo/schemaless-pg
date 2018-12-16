@@ -19,4 +19,5 @@
 #
 
 class SlColumn < ApplicationRecord
+  belongs_to :sl_table
 end

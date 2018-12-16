@@ -11,4 +11,6 @@
 #
 
 class SlTable < ApplicationRecord
+  has_many :sl_columns, -> { order(position: :asc)}
+  has_many :sl_rows
 end

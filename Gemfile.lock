@@ -161,6 +161,7 @@ GEM
     mimemagic (0.3.2)
     mini_mime (1.0.1)
     mini_portile2 (2.3.0)
+    mini_sql (0.1.10)
     minitest (5.11.3)
     minitest-ci (3.4.0)
       minitest (>= 5.0.6)
@@ -336,6 +337,7 @@ DEPENDENCIES
   listen (>= 3.0.5)
   mail (>= 2.6.3)
   marco-polo
+  mini_sql
   minitest-ci (>= 3.3.0)
   mocha (>= 1.4.0)
   overcommit (>= 0.37.0)
