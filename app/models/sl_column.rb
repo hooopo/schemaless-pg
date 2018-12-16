@@ -20,4 +20,51 @@
 
 class SlColumn < ApplicationRecord
   belongs_to :sl_table
+
+  NATIVE_DATABASE_TYPES = {
+    primary_key: "bigserial primary key",
+    string:      { name: "character varying" },
+    text:        { name: "text" },
+    integer:     { name: "integer", limit: 4 },
+    float:       { name: "float" },
+    decimal:     { name: "decimal" },
+    datetime:    { name: "timestamp" },
+    time:        { name: "time" },
+    date:        { name: "date" },
+    daterange:   { name: "daterange" },
+    numrange:    { name: "numrange" },
+    tsrange:     { name: "tsrange" },
+    tstzrange:   { name: "tstzrange" },
+    int4range:   { name: "int4range" },
+    int8range:   { name: "int8range" },
+    binary:      { name: "bytea" },
+    boolean:     { name: "boolean" },
+    xml:         { name: "xml" },
+    tsvector:    { name: "tsvector" },
+    hstore:      { name: "hstore" },
+    inet:        { name: "inet" },
+    cidr:        { name: "cidr" },
+    macaddr:     { name: "macaddr" },
+    uuid:        { name: "uuid" },
+    json:        { name: "json" },
+    jsonb:       { name: "jsonb" },
+    ltree:       { name: "ltree" },
+    citext:      { name: "citext" },
+    point:       { name: "point" },
+    line:        { name: "line" },
+    lseg:        { name: "lseg" },
+    box:         { name: "box" },
+    path:        { name: "path" },
+    polygon:     { name: "polygon" },
+    circle:      { name: "circle" },
+    bit:         { name: "bit" },
+    bit_varying: { name: "bit varying" },
+    money:       { name: "money" },
+    interval:    { name: "interval" },
+    oid:         { name: "oid" },
+  }
+
+  def expression
+    %Q{(CAST (data ->> #{ApplicationRecord.connection.quote(self.id.to_s)}) AS #{self.private_type}) AS #{ApplicationRecord.connection.quote_column_name(self.name)}}
+  end
 end

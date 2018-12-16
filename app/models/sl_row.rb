@@ -5,12 +5,12 @@
 #  created_at  :datetime         not null
 #  data        :jsonb
 #  id          :bigint(8)        not null, primary key
-#  sl_talbe_id :bigint(8)
+#  sl_table_id :bigint(8)
 #  updated_at  :datetime         not null
 #
 # Indexes
 #
-#  index_sl_rows_on_sl_talbe_id  (sl_talbe_id)
+#  index_sl_rows_on_sl_table_id  (sl_table_id)
 #
 
 class SlRow < ApplicationRecord

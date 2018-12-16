@@ -29,11 +29,11 @@ ActiveRecord::Schema.define(version: 2018_12_16_081313) do
   end
 
   create_table "sl_rows", comment: "schemaless row", force: :cascade do |t|
-    t.bigint "sl_talbe_id"
+    t.bigint "sl_table_id"
     t.jsonb "data", comment: "数据"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["sl_talbe_id"], name: "index_sl_rows_on_sl_talbe_id"
+    t.index ["sl_table_id"], name: "index_sl_rows_on_sl_table_id"
   end
 
   create_table "sl_tables", comment: "schemaless table", force: :cascade do |t|
