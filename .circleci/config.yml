@@ -1,0 +1,90 @@
+# Ruby CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-ruby/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/ruby:2.3.7-node-browsers
+        environment:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          RAILS_ENV: test
+      - image: circleci/postgres:10.5-alpine
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ arch }}-{{ checksum "Gemfile.lock" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-{{ arch }}-
+
+      - run:
+          name: Install dependencies
+          command: |
+            bundle install --deployment --jobs=4 --retry=3 --path vendor/bundle
+            bundle clean
+
+      - save_cache:
+          paths:
+            - ./vendor/bundle
+          key: v1-dependencies-{{ arch }}-{{ checksum "Gemfile.lock" }}
+
+      - run:
+          name: Run overcommit
+          command: |
+            git config --local user.name "Circle CI"
+            git config --local user.email ci@example.com
+            bundle exec overcommit --sign
+            bundle exec overcommit --run
+
+      - run:
+          name: Run security audits
+          command: |
+            bundle exec brakeman -q --no-summary
+            bundle exec bundle-audit check --update -v
+
+      - run:
+          name: Set up database
+          command: |
+            cp config/database.example.yml config/database.yml
+            cp example.env .env
+            bundle exec rake db:setup
+
+      - run:
+          name: Run tests
+          command: |
+            bundle exec rake test test:system TESTOPTS="--ci-dir=./reports"
+
+      - store_test_results:
+          path: ./reports
+
+      - store_artifacts:
+          path: ./tmp/screenshots
+          destination: screenshots
+
+workflows:
+  version: 2
+  commit-workflow:
+    jobs:
+      - build
+  cron-workflow:
+    triggers:
+      - schedule:
+          cron: "0 13 * * 1,2,3,4,5"
+          filters:
+            branches:
+              only:
+                - master
+                - development
+    jobs:
+      - build
