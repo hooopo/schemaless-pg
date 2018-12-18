@@ -2,15 +2,17 @@
 #
 # Table name: sl_columns
 #
-#  created_at   :datetime         not null
-#  id           :bigint(8)        not null, primary key
-#  name         :string           not null
-#  options      :string           default([]), is an Array
-#  position     :integer          default(0)
-#  private_type :string           not null
-#  public_type  :string
-#  sl_table_id  :bigint(8)
-#  updated_at   :datetime         not null
+#  created_at      :datetime         not null
+#  id              :bigint(8)        not null, primary key
+#  name            :string           not null
+#  options         :string           default([]), is an Array
+#  position        :integer          default(0)
+#  private_type    :string           not null
+#  public_type     :string
+#  ref_sl_table_id :bigint(8)
+#  ref_table_name  :string
+#  sl_table_id     :bigint(8)
+#  updated_at      :datetime         not null
 #
 # Indexes
 #
@@ -20,6 +22,7 @@
 
 class SlColumn < ApplicationRecord
   belongs_to :sl_table
+  belongs_to :ref_sl_table
 
   # TODO fix table name change
   after_create do 
@@ -32,6 +35,18 @@ class SlColumn < ApplicationRecord
 
   after_destroy do 
     sl_table.create_or_replace_view!
+  end
+
+  def array?
+    private_type.end_with?("[]")
+  end
+
+  def ref_sl_table?
+    ref_sl_table_id.present?
+  end
+
+  def ref_table?
+    ref_table_name.present?
   end
 
   NATIVE_DATABASE_TYPES = {
