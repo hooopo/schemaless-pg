@@ -10,10 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_12_18_173444) do
+ActiveRecord::Schema.define(version: 2018_12_18_191057) do
 
   # These are extensions that must be enabled in order to support this database
+  enable_extension "btree_gin"
+  enable_extension "btree_gist"
+  enable_extension "pg_trgm"
   enable_extension "plpgsql"
+  enable_extension "rum"
+  enable_extension "zhparser"
 
   create_table "sl_columns", comment: "schemaless column", force: :cascade do |t|
     t.bigint "sl_table_id"
