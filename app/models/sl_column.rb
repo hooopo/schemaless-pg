@@ -21,6 +21,30 @@
 #
 
 class SlColumn < ApplicationRecord
+  NATIVE_DATABASE_TYPES = {
+    string:      { name: "varchar" },
+    text:        { name: "text" },
+    integer:     { name: "integer"},
+    float:       { name: "float" },
+    decimal:     { name: "decimal" },
+    datetime:    { name: "timestamp" },
+    time:        { name: "time" },
+    date:        { name: "date" },
+    daterange:   { name: "daterange" },
+    numrange:    { name: "numrange" },
+    tsrange:     { name: "tsrange" },
+    tstzrange:   { name: "tstzrange" },
+    int4range:   { name: "int4range" },
+    int8range:   { name: "int8range" },
+    boolean:     { name: "boolean" },
+    inet:        { name: "inet" },
+    uuid:        { name: "uuid" },
+    json:        { name: "json" },
+    jsonb:       { name: "jsonb" },
+    point:       { name: "point" },
+    money:       { name: "money" }
+  }
+
   belongs_to :sl_table
   belongs_to :ref_sl_table
 
@@ -37,8 +61,31 @@ class SlColumn < ApplicationRecord
     sl_table.create_or_replace_view!
   end
 
-  def array?
+  def array_type?
     private_type.end_with?("[]")
+  end
+
+  def text_type?
+    private_type == 'text'
+  end
+
+  def range_type?
+    private_type =~ /range(\[\])?$/
+  end
+
+  def btree_index?
+    return false if array_type?
+    return false if range_type?
+    return false if text_type?
+    return true
+  end
+
+  def gin_index?
+    # todo
+  end
+
+  def fulltext_index?
+    text_type?
   end
 
   def ref_sl_table?
@@ -49,50 +96,35 @@ class SlColumn < ApplicationRecord
     ref_table_name.present?
   end
 
-  NATIVE_DATABASE_TYPES = {
-    primary_key: "bigserial primary key",
-    string:      { name: "character varying" },
-    text:        { name: "text" },
-    integer:     { name: "integer", limit: 4 },
-    float:       { name: "float" },
-    decimal:     { name: "decimal" },
-    datetime:    { name: "timestamp" },
-    time:        { name: "time" },
-    date:        { name: "date" },
-    daterange:   { name: "daterange" },
-    numrange:    { name: "numrange" },
-    tsrange:     { name: "tsrange" },
-    tstzrange:   { name: "tstzrange" },
-    int4range:   { name: "int4range" },
-    int8range:   { name: "int8range" },
-    binary:      { name: "bytea" },
-    boolean:     { name: "boolean" },
-    xml:         { name: "xml" },
-    tsvector:    { name: "tsvector" },
-    hstore:      { name: "hstore" },
-    inet:        { name: "inet" },
-    cidr:        { name: "cidr" },
-    macaddr:     { name: "macaddr" },
-    uuid:        { name: "uuid" },
-    json:        { name: "json" },
-    jsonb:       { name: "jsonb" },
-    ltree:       { name: "ltree" },
-    citext:      { name: "citext" },
-    point:       { name: "point" },
-    line:        { name: "line" },
-    lseg:        { name: "lseg" },
-    box:         { name: "box" },
-    path:        { name: "path" },
-    polygon:     { name: "polygon" },
-    circle:      { name: "circle" },
-    bit:         { name: "bit" },
-    bit_varying: { name: "bit varying" },
-    money:       { name: "money" },
-    interval:    { name: "interval" },
-    oid:         { name: "oid" },
-  }
+  def create_index!
+    ApplicationRecord.connection.execute(index_expression) if index_expression
+  end
+
+  def drop_index!
+    ApplicationRecord.connection.execute("DROP INDEX IF EXISTS #{index_name}")
+  end
+
+  def index_name(idx_type = 'btree')
+    ApplicationRecord.connection.quote_column_name([sl_table_id, idx_type, id, name].join("_"))
+  end
+
+  # TODO gin or fulltext
+  def index_expression
+    if btree_index?
+      sql = <<~SQL
+        CREATE INDEX CONCURRENTLY IF NOT EXISTS #{index_name} 
+        ON sl_rows 
+        USING BTREE (sl_table_id, CAST ((data ->> #{row_key}) AS #{private_type})) 
+        WHERE sl_table_id = #{self.sl_table_id}
+      SQL
+    end
+  end
 
   def expression
-    %Q{(CAST (data ->> #{ApplicationRecord.connection.quote(self.id.to_s)} AS #{self.private_type})) AS #{ApplicationRecord.connection.quote_column_name(self.name)}}
+    %Q{(CAST (data ->> #{row_key} AS #{self.private_type})) AS #{ApplicationRecord.connection.quote_column_name(self.name)}}
+  end
+
+  def row_key
+    ApplicationRecord.connection.quote(self.id.to_s)
   end
 end
