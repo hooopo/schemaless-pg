@@ -18,7 +18,7 @@ p_date   = product.sl_columns.create(name: 'date', public_type: '日期', privat
 price    = product.sl_columns.create(name: 'price', public_type: '浮点数', private_type: 'decimal(10, 2)')
 category = product.sl_columns.create(name: 'category', public_type: '字符串', private_type: 'varchar')
 
-10000.times do
+100000.times do
   product.sl_rows.create(data: {
     name.id => rand(10) * 8,
     desc.id => rand(10) * 300,
@@ -39,7 +39,7 @@ age           = order.sl_columns.create(name: 'age', public_type: '整数', priv
 tags          = order.sl_columns.create(name: 'tags', public_type: '标签', private_type: 'varchar[]')
 product_id    = order.sl_columns.create(name: 'product_id', public_type: '产品', private_type: 'int4', ref_sl_table_id: product.id)
 
-100000.times do 
+1000000.times do 
   order.sl_rows.create(data: {
     customer_name.id => rand(10).to_s * 8, 
     total.id =>  rand * 100, 

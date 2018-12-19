@@ -149,6 +149,18 @@ schemaless-pg(dev)> ap t.rows_from_view
 
 ## 表之间的引用
 
+通过sl_view引用产生的view，和两个普通表一样，可以任意JOIN
+
+```
+schemaless-pg_development=# select o.id from sl_view.orders as o inner join sl_view.products as p on p.id = o.product_id  where p.name = '24' limit 1;
+   id
+--------
+ 176068
+(1 row)
+
+Time: 0.791 ms
+```
+
 ## 过滤和排序
 
 ## 搜索
@@ -159,9 +171,119 @@ schemaless-pg(dev)> ap t.rows_from_view
 
 ### sl_table_id index
 
+默认情况，通过sl_view进行查询，会使用到sl_table_id这个index。
+
+```
+schemaless-pg_development=#  select count(*) from sl_view.products;
+ count
+--------
+ 100000
+(1 row)
+
+Time: 68.302 ms
+schemaless-pg_development=# explain analyze  select count(*) from sl_view.products;
+                                                                           QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=5900.08..5900.09 rows=1 width=8) (actual time=149.594..149.595 rows=1 loops=1)
+   ->  Index Only Scan using index_sl_rows_on_sl_table_id on sl_rows  (cost=0.42..5640.25 rows=103933 width=0) (actual time=0.465..129.799 rows=100000 loops=1)
+         Index Cond: (sl_table_id = 7)
+         Heap Fetches: 100000
+ Planning time: 0.639 ms
+ Execution time: 150.509 ms
+(6 rows)
+
+Time: 262.017 ms
+```
+
 ### primary_key index
 
+主键查询可以利用sl_rows_pkey这个索引
+
+```
+schemaless-pg_development=#  select id from sl_view.products where id = 95085;
+  id
+-------
+ 95085
+(1 row)
+
+Time: 17.260 ms
+schemaless-pg_development=# explain analyze select id from sl_view.products where id = 95085;
+                                                      QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------
+ Index Scan using sl_rows_pkey on sl_rows  (cost=0.42..8.45 rows=1 width=8) (actual time=0.643..0.644 rows=1 loops=1)
+   Index Cond: (id = 95085)
+   Filter: (sl_table_id = 7)
+ Planning time: 0.158 ms
+ Execution time: 2.491 ms
+ ```
+
 ### custom btree index
+
+给 sl_view.orders.age 字段上面加btree索引：
+
+```
+t  = SlTable.last
+c  = t.sl_columns.where(name: :age).first
+c.create_index!
+```
+
+生成 create index 语句：
+```
+(8764.0ms)  CREATE INDEX CONCURRENTLY IF NOT EXISTS "8_btree_42_age"
+ON sl_rows
+USING BTREE (sl_table_id, CAST ((data ->> '42') AS int4))
+WHERE sl_table_id = 8
+```
+
+等值过滤：
+
+```
+schemaless-pg_development=# select * from sl_view.orders where age = 40 limit 1;
+   id   | customer_name | total |    date    | age |       tags       | product_id
+--------+---------------+-------+------------+-----+------------------+------------
+ 914599 | 55555555      | 94.30 | 2018-04-07 |  40 | {电击,电动,电子} |      41757
+(1 row)
+
+Time: 13.313 ms
+
+explain analyze select id from sl_view.orders where age = 40 limit 10 ;
+                                                                QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..62.64 rows=10 width=8) (actual time=82.712..82.784 rows=10 loops=1)
+   ->  Index Scan using "8_btree_42_age" on sl_rows  (cost=0.42..22752.74 rows=3657 width=8) (actual time=82.710..82.782 rows=10 loops=1)
+         Index Cond: (((data ->> '42'::text))::integer = 40)
+ Planning time: 8.856 ms
+ Execution time: 83.890 ms
+(5 rows)
+
+Time: 155.321 ms
+```
+
+比较过滤：
+
+由于测试数据生成的分布太均匀，目前用不到索引...
+
+排序：
+
+```
+schemaless-pg_development=# explain analyze select * from sl_view.orders order by age limit 1;
+                                                                 QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..0.56 rows=1 width=100) (actual time=0.124..0.125 rows=1 loops=1)
+   ->  Index Scan using "8_btree_42_age" on sl_rows  (cost=0.42..103273.76 rows=743546 width=100) (actual time=0.123..0.123 rows=1 loops=1)
+ Planning time: 0.458 ms
+ Execution time: 0.163 ms
+(4 rows)
+
+Time: 2.640 ms
+schemaless-pg_development=# select * from sl_view.orders order by age limit 1;
+   id   | customer_name | total |    date    | age |       tags       | product_id
+--------+---------------+-------+------------+-----+------------------+------------
+ 926757 | 22222222      | 86.78 | 2018-05-14 |   0 | {产品,电子,电击} |      29457
+(1 row)
+
+Time: 3.484 ms
+```
 
 ### custom gin index
 
