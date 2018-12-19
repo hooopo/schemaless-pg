@@ -28,6 +28,8 @@
     t.string "private_type", null: false, comment: "私有类型：int4,int8,varchar, text, int4[], float, money, timestamp, date, int4range, point"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "ref_sl_table_id", comment: "引用的sl table id，用于schemaless table和schemaless table之间的关联"
+    t.string "ref_table_name", comment: "引用的外部表名，用于和已存在是实体表之间的关联"
     t.index ["sl_table_id", "name"], name: "index_sl_columns_on_sl_table_id_and_name", unique: true
     t.index ["sl_table_id", "position"], name: "index_sl_columns_on_sl_table_id_and_position"
   end
@@ -155,7 +157,22 @@ schemaless-pg(dev)> ap t.rows_from_view
 
 ## 性能和索引相关
 
+### sl_table_id index
+
+### primary_key index
+
+### custom btree index
+
+### custom gin index
+
+### custom fulltext index
+
+### custom multi-column index
+
+
 ## 多租和隔离
+
+## Sharding
 
 ## Deployment
 

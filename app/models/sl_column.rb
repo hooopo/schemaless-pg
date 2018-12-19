@@ -46,7 +46,7 @@ class SlColumn < ApplicationRecord
   }
 
   belongs_to :sl_table
-  belongs_to :ref_sl_table
+  belongs_to :ref_sl_table, optional: true
 
   # TODO fix table name change
   after_create do 
