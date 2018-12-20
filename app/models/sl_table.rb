@@ -49,6 +49,13 @@ class SlTable < ApplicationRecord
     @pg ||= MiniSql::Connection.new(ActiveRecord::Base.connection.raw_connection)
   end
 
+  def sl_class
+    klass = Class.new(ApplicationRecord)
+    klass.table_name = view_name
+    klass.primary_key = :id
+    klass
+  end
+
   def rows_from_view
     pg.query_hash("select * from #{view_name}")
   end

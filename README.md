@@ -108,6 +108,8 @@ View definition:
 
 ## Ruby 调用
 
+### Use MiniSql
+
 ```ruby
 schemaless-pg(dev)> ap t.rows_from_view
 [
@@ -145,6 +147,28 @@ schemaless-pg(dev)> ap t.rows_from_view
         ]
     }
 ]
+```
+
+### Use ActiveRecord
+
+```
+schemaless-pg(dev)> sl_table = SlTable.first
+  SlTable Load (1.1ms)  SELECT  "sl_tables".* FROM "sl_tables" ORDER BY "sl_tables"."id" ASC LIMIT $1  [["LIMIT", 1]]
+=> #<SlTable id: 1, name: "products", desc: nil, user_id: nil, created_at: "2018-12-20 17:06:00", updated_at: "2018-12-20 17:06:00">
+schemaless-pg(dev)> ar_class = sl_table.sl_class
+=> #<Class:0x00007f915923d4e8>(id: integer, name: string, desc: text, date: date, price: decimal, category: string)
+schemaless-pg(dev)> ar_class.count
+   (23.3ms)  SELECT COUNT(*) FROM "sl_view"."products"
+=> 10000
+schemaless-pg(dev)> ar_class.first
+   Load (5.4ms)  SELECT  "sl_view"."products".* FROM "sl_view"."products" ORDER BY "sl_view"."products"."id" ASC LIMIT $1  [["LIMIT", 1]]
+=> #<#<Class:0x00007f915923d4e8> id: 1, name: "320000", desc: "2700", date: "2016-06-14", price: 0.21999e3, category: "420">
+schemaless-pg(dev)> ar_class.where("price > 100").first
+   Load (12.5ms)  SELECT  "sl_view"."products".* FROM "sl_view"."products" WHERE (price > 100) ORDER BY "sl_view"."products"."id" ASC LIMIT $1  [["LIMIT", 1]]
+=> #<#<Class:0x00007f915923d4e8> id: 1, name: "320000", desc: "2700", date: "2016-06-14", price: 0.21999e3, category: "420">
+schemaless-pg(dev)> ar_class.where("price > 100").first.name
+   Load (2.9ms)  SELECT  "sl_view"."products".* FROM "sl_view"."products" WHERE (price > 100) ORDER BY "sl_view"."products"."id" ASC LIMIT $1  [["LIMIT", 1]]
+=> "320000"
 ```
 
 ## 表之间的引用

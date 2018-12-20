@@ -18,13 +18,13 @@ p_date   = product.sl_columns.create(name: 'date', public_type: '日期', privat
 price    = product.sl_columns.create(name: 'price', public_type: '浮点数', private_type: 'decimal(10, 2)')
 category = product.sl_columns.create(name: 'category', public_type: '字符串', private_type: 'varchar')
 
-100000.times do
+10000.times do
   product.sl_rows.create(data: {
-    name.id => rand(10) * 8,
+    name.id => rand(10) * 80000,
     desc.id => rand(10) * 300,
-    p_date.id => Date.today - rand(500),
-    price.id =>  rand * 100,
-    category.id => rand(10) * 6
+    p_date.id => Date.today - rand(1000),
+    price.id =>  rand * 1000,
+    category.id => rand(10) * 60
   })
 end
 
@@ -39,13 +39,13 @@ age           = order.sl_columns.create(name: 'age', public_type: '整数', priv
 tags          = order.sl_columns.create(name: 'tags', public_type: '标签', private_type: 'varchar[]')
 product_id    = order.sl_columns.create(name: 'product_id', public_type: '产品', private_type: 'int4', ref_sl_table_id: product.id)
 
-1000000.times do 
+18000.times do 
   order.sl_rows.create(data: {
     customer_name.id => rand(10).to_s * 8, 
-    total.id =>  rand * 100, 
-    date.id => Date.today - rand(500), 
-    age.id => rand(100),
-    tags.id => SlRow.pg_array(%w[土豪 电子 产品 爱好者 电影 电商 电子 电动 电网 电击].sample(3)),
+    total.id =>  rand * 10000, 
+    date.id => Date.today - rand(5000), 
+    age.id => rand(1000000),
+    tags.id => SlRow.pg_array((%w[土豪 电子 产品 爱好者 电影 电商 电子 电动 电网 电击] + (1..1000).map{|x| x.to_s}).sample(3)),
     product_id.id => rand(product_count) + 1
   })
 end
