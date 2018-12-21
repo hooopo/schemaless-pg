@@ -44,6 +44,7 @@ group :development do
   gem "terminal-notifier", require: false
   gem "terminal-notifier-guard", require: false
   gem "xray-rails", ">= 0.1.18"
+  gem "pry-rails"
 end
 
 group :test do
@@ -56,3 +57,5 @@ group :test do
   gem "shoulda-context"
   gem "shoulda-matchers", ">= 3.0.1"
 end
+
+gem 'blazer'

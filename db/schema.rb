@@ -10,13 +10,67 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_12_18_191057) do
+ActiveRecord::Schema.define(version: 2018_12_21_101048) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
   enable_extension "btree_gist"
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
+
+  create_table "blazer_audits", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "query_id"
+    t.text "statement"
+    t.string "data_source"
+    t.datetime "created_at"
+    t.index ["query_id"], name: "index_blazer_audits_on_query_id"
+    t.index ["user_id"], name: "index_blazer_audits_on_user_id"
+  end
+
+  create_table "blazer_checks", force: :cascade do |t|
+    t.bigint "creator_id"
+    t.bigint "query_id"
+    t.string "state"
+    t.string "schedule"
+    t.text "emails"
+    t.string "check_type"
+    t.text "message"
+    t.datetime "last_run_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_checks_on_creator_id"
+    t.index ["query_id"], name: "index_blazer_checks_on_query_id"
+  end
+
+  create_table "blazer_dashboard_queries", force: :cascade do |t|
+    t.bigint "dashboard_id"
+    t.bigint "query_id"
+    t.integer "position"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["dashboard_id"], name: "index_blazer_dashboard_queries_on_dashboard_id"
+    t.index ["query_id"], name: "index_blazer_dashboard_queries_on_query_id"
+  end
+
+  create_table "blazer_dashboards", force: :cascade do |t|
+    t.bigint "creator_id"
+    t.text "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_dashboards_on_creator_id"
+  end
+
+  create_table "blazer_queries", force: :cascade do |t|
+    t.bigint "creator_id"
+    t.string "name"
+    t.text "description"
+    t.text "statement"
+    t.string "data_source"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_queries_on_creator_id"
+  end
 
   create_table "sl_columns", comment: "schemaless column", force: :cascade do |t|
     t.bigint "sl_table_id"
@@ -38,6 +92,9 @@ ActiveRecord::Schema.define(version: 2018_12_18_191057) do
     t.jsonb "data", comment: "数据"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index "sl_table_id, (((data ->> '7'::text))::numeric(10,2))", name: "2_btree_7_total", where: "(sl_table_id = 2)"
+    t.index "sl_table_id, (((data ->> '9'::text))::integer)", name: "2_btree_9_age", where: "(sl_table_id = 2)"
+    t.index "sl_table_id, (((data ->> '9'::text))::integer), id", name: "2_btree_9_age_id", where: "(sl_table_id = 2)"
     t.index ["sl_table_id"], name: "index_sl_rows_on_sl_table_id"
   end
 

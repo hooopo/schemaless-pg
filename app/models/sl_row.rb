@@ -10,6 +10,9 @@
 #
 # Indexes
 #
+#  2_btree_7_total               (sl_table_id, (((data ->> '7'::text))::numeric(10,2))) WHERE (sl_table_id = 2)
+#  2_btree_9_age                 (sl_table_id, (((data ->> '9'::text))::integer)) WHERE (sl_table_id = 2)
+#  2_btree_9_age_id              (sl_table_id, (((data ->> '9'::text))::integer), id) WHERE (sl_table_id = 2)
 #  index_sl_rows_on_sl_table_id  (sl_table_id)
 #
 
